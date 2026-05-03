@@ -23,6 +23,60 @@ const breakMessages = [
 	"Take a deep breath before continuing later."
 ];
 
+// STREAK TRACKING SYSTEM
+function getTodayDateString() {
+	return new Date().toISOString().split("T")[0];
+}
+
+function updateStreak() {
+	const today = getTodayDateString();
+
+	browser.storage.local.get(["streakCount", "lastVisitDate", "todayVisits"])
+		.then(data => {
+			let streak = data.streakCount || 0;
+			let lastDate = data.lastVisitDate || null;
+			let visits = data.todayVisits || 0;
+
+			if (lastDate === today) {
+				// same day → just increment visits
+				visits++;
+			} else {
+				// new day
+				if (visits <= 2) {
+					// low visits yesterday = success → increase streak
+					streak++;
+				} else {
+					// too many visits = reset streak
+					streak = 0;
+				}
+				visits = 1;
+			}
+
+			let longest = data.longestStreak || 0;
+
+			if (streak > longest) {
+				longest = streak;
+			}
+
+			browser.storage.local.set({
+				streakCount: streak,
+				longestStreak: longest,
+				lastVisitDate: today,
+				todayVisits: visits
+			});
+
+			displayStreak(streak);
+		});
+}
+
+function displayStreak(streak) {
+	let streakEl = document.getElementById("lbStreak");
+
+	if (streakEl) {
+		streakEl.innerText = `🔥 Focus Streak: ${streak} day${streak !== 1 ? "s" : ""}`;
+	}
+}
+
 // Create 32-bit integer hash code from string
 //
 function hashCode32(str) {
@@ -124,6 +178,9 @@ function processBlockInfo(info) {
 		updateMotivation();
 		// rotate every 15 seconds
 		setInterval(updateMotivation, 15000);
+
+		//
+		updateStreak();
 	}
 
 	// BREAK REMINDER SYSTEM

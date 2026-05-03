@@ -152,6 +152,16 @@ function refreshPage() {
 			getElement("timeSaved").innerText = timeSavedFormatted;
 		}
 
+		// LOAD STREAK DATA
+		browser.storage.local.get(["streakCount", "longestStreak"])
+			.then(streakData => {
+				let current = streakData.streakCount || 0;
+				let longest = streakData.longestStreak || 0;
+
+				getElement("currentStreak").innerText = `${current} day${current !== 1 ? "s" : ""}`;
+				getElement("longestStreak").innerText = `${longest} day${longest !== 1 ? "s" : ""}`;
+			});
+
 		$("#form").show();
 	}
 
