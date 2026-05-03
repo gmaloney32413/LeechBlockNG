@@ -31,28 +31,31 @@ function getTodayDateString() {
 function updateStreak() {
 	const today = getTodayDateString();
 
-	browser.storage.local.get(["streakCount", "lastVisitDate", "todayVisits"])
+	browser.storage.local.get(["streakCount", "lastVisitDate", "todayVisits", "longestStreak"])
 		.then(data => {
 			let streak = data.streakCount || 0;
 			let lastDate = data.lastVisitDate || null;
 			let visits = data.todayVisits || 0;
+			let longest = data.longestStreak || 0;
 
-			if (lastDate === today) {
-				// same day → just increment visits
+			if (!lastDate) {
+				// ✅ First time ever
+				streak = 1;
+				visits = 1;
+			}
+			else if (lastDate === today) {
+				// Same day
 				visits++;
-			} else {
-				// new day
+			}
+			else {
+				// New day
 				if (visits <= 2) {
-					// low visits yesterday = success → increase streak
 					streak++;
 				} else {
-					// too many visits = reset streak
-					streak = 0;
+					streak = 1; // reset but count today
 				}
 				visits = 1;
 			}
-
-			let longest = data.longestStreak || 0;
 
 			if (streak > longest) {
 				longest = streak;
@@ -178,10 +181,9 @@ function processBlockInfo(info) {
 		updateMotivation();
 		// rotate every 15 seconds
 		setInterval(updateMotivation, 15000);
-
-		//
-		updateStreak();
 	}
+
+	updateStreak();
 
 	// BREAK REMINDER SYSTEM
 	let breakEl = document.getElementById("lbBreakReminder");
